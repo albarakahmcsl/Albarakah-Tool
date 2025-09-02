@@ -26,7 +26,7 @@ export const userProfileApi = {
     console.log('[dataFetching] fetchUserProfile START - userId:', userId)
     
     try {
-      // Step 1: Fetch user profile with roles in a single query
+      // Single optimized query to fetch user profile with roles and permissions
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select(`
@@ -45,7 +45,15 @@ export const userProfileApi = {
             roles(
               id,
               name,
-              description
+              description,
+              role_permissions(
+                permissions(
+                  id,
+                  resource,
+                  action,
+                  description
+                )
+              )
             )
           )
         `)
@@ -62,45 +70,34 @@ export const userProfileApi = {
         throw new Error('User profile not found')
       }
       
-      // Step 2: Extract roles from the joined data
+      // Extract roles and permissions from the nested joined data
       const roles = userData.user_roles?.map(ur => ur.roles).filter(Boolean) || []
       const roleIds = roles.map(role => role.id)
       
-      // Step 3: Fetch permissions for these roles if roles exist
-      let uniquePermissions = []
-      if (roleIds.length > 0) {
-        const { data: rolePermissions, error: permissionsError } = await supabase
-          .from('role_permissions')
-          .select(`
-            permissions(
-              id,
-              resource,
-              action,
-              description
-            )
-          `)
-          .in('role_id', roleIds)
-
-        if (permissionsError) {
-          console.error('[dataFetching] fetchUserProfile PERMISSIONS ERROR:', permissionsError)
-          throw permissionsError
-        }
-
-        // Flatten all permissions from all roles
-        const allPermissions = rolePermissions?.map(rp => rp.permissions).filter(Boolean) || []
+      // Flatten all permissions from all roles (already fetched in the single query)
+      const allPermissions = roles.flatMap(role => 
+        role.role_permissions?.map(rp => rp.permissions).filter(Boolean) || []
+      )
       
-        // Remove duplicate permissions based on resource + action combination
-        uniquePermissions = allPermissions.filter((permission, index, array) => 
-          array.findIndex(p => p.resource === permission.resource && p.action === permission.action) === index
-        )
-      }
+      // Remove duplicate permissions based on resource + action combination
+      const uniquePermissions = allPermissions.filter((permission, index, array) => 
+        array.findIndex(p => p.resource === permission.resource && p.action === permission.action) === index
+      )
+      
+      // Clean up the roles data to remove the nested role_permissions
+      const cleanRoles = roles.map(role => ({
+        id: role.id,
+        name: role.name,
+        description: role.description,
+        created_at: role.created_at
+      }))
       
       // Remove the user_roles join data from the final object
       const { user_roles, ...userDataWithoutJoins } = userData
       
       const transformedUser = {
         ...userDataWithoutJoins,
-        roles,
+        roles: cleanRoles,
         role_ids: roleIds,
         permissions: uniquePermissions
       }

@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { queryClient, queryKeys } from './lib/queryClient'
-import { dashboardApi, adminUsersApi, rolesApi, adminRolesApi, adminPermissionsApi } from './lib/dataFetching'
+import { dashboardApi, adminUsersApi, rolesApi, adminRolesApi, adminPermissionsApi, membersApi } from './lib/dataFetching' // Add membersApi
 import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
@@ -17,6 +17,7 @@ const AdminUsers = React.lazy(() => import('./pages/AdminUsers'))
 const AdminRoles = React.lazy(() => import('./pages/AdminRoles'))
 const AdminPermissions = React.lazy(() => import('./pages/AdminPermissions'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
+const MembersPage = React.lazy(() => import('./pages/MembersPage')) // New: Import MembersPage
 
 // Loading fallback component
 const PageLoadingFallback = () => (
@@ -130,6 +131,21 @@ const adminPermissionsLoader = async () => {
   }
 }
 
+const membersLoader = async () => { // New: Loader for MembersPage
+  console.log('[App] membersLoader START')
+  try {
+    const membersData = await queryClient.fetchQuery({
+      queryKey: queryKeys.members(),
+      queryFn: membersApi.getMembers,
+    })
+    console.log('[App] membersLoader SUCCESS')
+    return { members: membersData.members }
+  } catch (error) {
+    console.error('[App] membersLoader ERROR:', error)
+    return { members: [] }
+  }
+}
+
 // Router configuration with loaders
 const router = createBrowserRouter([
   {
@@ -218,6 +234,18 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
         loader: adminPermissionsLoader,
+        hydrateFallbackElement: <PageLoadingFallback />,
+      },
+      {
+        path: 'members', // New: Route for MembersPage
+        element: (
+          <ProtectedRoute requiredPermission={{ resource: 'members', action: 'manage' }}>
+            <Suspense fallback={<PageLoadingFallback />}>
+              <MembersPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+        loader: membersLoader, // New: Add loader for MembersPage
         hydrateFallbackElement: <PageLoadingFallback />,
       },
       {

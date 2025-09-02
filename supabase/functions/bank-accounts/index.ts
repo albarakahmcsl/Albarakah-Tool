@@ -88,18 +88,6 @@ Deno.serve(async (req) => {
     // Get path segments relative to bank-accounts
     const pathSegments = allPathSegments.slice(bankAccountsIndex)
     
-    // Find the index of 'bank-accounts' in the path
-    const bankAccountsIndex = allPathSegments.findIndex(segment => segment === 'bank-accounts')
-    if (bankAccountsIndex === -1) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid path: bank-accounts not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-    
-    // Get path segments relative to bank-accounts
-    const pathSegments = allPathSegments.slice(bankAccountsIndex)
-
     // Handle /bank-accounts/:id/summary endpoint  
     if (method === 'GET' && pathSegments.length === 3 && pathSegments[2] === 'summary') {
       const bankAccountId = pathSegments[1]
@@ -144,7 +132,7 @@ Deno.serve(async (req) => {
         const { data, error } = await supabase
           .from('bank_accounts')
           .select('*')
-          .order('name', { ascending: true })
+          .order('account_name', { ascending: true })
 
         if (error) {
           console.error('Error fetching bank accounts:', error.message)

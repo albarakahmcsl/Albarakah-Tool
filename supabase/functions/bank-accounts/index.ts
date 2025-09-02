@@ -75,11 +75,10 @@ Deno.serve(async (req) => {
     const url = new URL(req.url)
     const method = req.method
     const pathSegments = url.pathname.split('/').filter(Boolean)
-    const id = pathSegments[pathSegments.length - 1] // Get ID for specific resource operations
 
     // Handle /bank-accounts/:id/summary endpoint
-    if (method === 'GET' && pathSegments[pathSegments.length - 2] === 'bank-accounts' && id === 'summary') {
-      const bankAccountId = pathSegments[pathSegments.length - 3]; // Get the actual bank_account_id
+    if (method === 'GET' && pathSegments.length === 5 && pathSegments[2] === 'bank-accounts' && pathSegments[4] === 'summary') {
+      const bankAccountId = pathSegments[3]; // Get the actual bank_account_id
       if (!bankAccountId) {
         return new Response(
           JSON.stringify({ error: 'Bank account ID is required for summary' }),
@@ -114,8 +113,31 @@ Deno.serve(async (req) => {
     }
 
     // GET all bank accounts or a specific bank account
-    if (method === 'GET' && pathSegments[pathSegments.length - 2] === 'bank-accounts') {
-      if (id && id !== 'bank-accounts') { // Get specific bank account
+    if (method === 'GET') {
+      // Check if this is a request for all bank accounts (/functions/v1/bank-accounts)
+      if (pathSegments.length === 3 && pathSegments[2] === 'bank-accounts') {
+        // Get all bank accounts
+        const { data, error } = await supabase
+          .from('bank_accounts')
+          .select('*')
+          .order('name', { ascending: true })
+
+        if (error) {
+          console.error('Error fetching bank accounts:', error.message)
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        return new Response(
+          JSON.stringify({ bank_accounts: data || [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      // Check if this is a request for a specific bank account (/functions/v1/bank-accounts/:id)
+      else if (pathSegments.length === 4 && pathSegments[2] === 'bank-accounts') {
+        const id = pathSegments[3]
+        // Get specific bank account
         const { data, error } = await supabase
           .from('bank_accounts')
           .select('*')
@@ -139,28 +161,11 @@ Deno.serve(async (req) => {
           JSON.stringify({ bank_account: data }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
-      } else { // Get all bank accounts
-        const { data, error } = await supabase
-          .from('bank_accounts')
-          .select('*')
-          .order('name', { ascending: true })
-
-        if (error) {
-          console.error('Error fetching bank accounts:', error.message)
-          return new Response(
-            JSON.stringify({ error: error.message }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-        return new Response(
-          JSON.stringify({ bank_accounts: data || [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
       }
     }
 
     // POST create bank account
-    if (method === 'POST' && url.pathname.endsWith('/bank-accounts')) {
+    if (method === 'POST' && pathSegments.length === 3 && pathSegments[2] === 'bank-accounts') {
       const body = await req.json()
       const { name, account_number, description } = body
 
@@ -191,7 +196,8 @@ Deno.serve(async (req) => {
     }
 
     // PUT update bank account
-    if (method === 'PUT' && pathSegments[pathSegments.length - 2] === 'bank-accounts' && id) {
+    if (method === 'PUT' && pathSegments.length === 4 && pathSegments[2] === 'bank-accounts') {
+      const id = pathSegments[3]
       const body = await req.json()
       const { name, account_number, description } = body
 
@@ -222,7 +228,8 @@ Deno.serve(async (req) => {
     }
 
     // DELETE bank account
-    if (method === 'DELETE' && pathSegments[pathSegments.length - 2] === 'bank-accounts' && id) {
+    if (method === 'DELETE' && pathSegments.length === 4 && pathSegments[2] === 'bank-accounts') {
+      const id = pathSegments[3]
       // Before deleting, check if any account_types are linked to this bank_account
       const { data: linkedAccountTypes, error: checkError } = await supabase
         .from('account_types')

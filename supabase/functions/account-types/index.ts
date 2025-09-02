@@ -53,11 +53,32 @@ Deno.serve(async (req) => {
     const url = new URL(req.url)
     const method = req.method
     const pathSegments = url.pathname.split('/').filter(Boolean)
-    const id = pathSegments[pathSegments.length - 1] // Get ID for specific resource operations
 
     // GET all account types or a specific account type
-    if (method === 'GET' && pathSegments[pathSegments.length - 2] === 'account-types') {
-      if (id && id !== 'account-types') { // Get specific account type
+    if (method === 'GET') {
+      // Check if this is a request for all account types (/functions/v1/account-types)
+      if (pathSegments.length === 3 && pathSegments[2] === 'account-types') {
+        // Get all account types
+        const { data, error } = await supabase
+          .from('account_types')
+          .select(`*, bank_accounts(id, name, account_number)`) // Select all account types and their linked bank accounts
+          .order('name', { ascending: true })
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        return new Response(
+          JSON.stringify({ account_types: data || [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      // Check if this is a request for a specific account type (/functions/v1/account-types/:id)
+      else if (pathSegments.length === 4 && pathSegments[2] === 'account-types') {
+        const id = pathSegments[3]
+        // Get specific account type
         const { data, error } = await supabase
           .from('account_types')
           .select(`*, bank_accounts(id, name, account_number)`) // Select account type and its linked bank account
@@ -80,27 +101,11 @@ Deno.serve(async (req) => {
           JSON.stringify({ account_type: data }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
-      } else { // Get all account types
-        const { data, error } = await supabase
-          .from('account_types')
-          .select(`*, bank_accounts(id, name, account_number)`) // Select all account types and their linked bank accounts
-          .order('name', { ascending: true })
-
-        if (error) {
-          return new Response(
-            JSON.stringify({ error: error.message }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-        return new Response(
-          JSON.stringify({ account_types: data || [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
       }
     }
 
     // POST create account type
-    if (method === 'POST' && url.pathname.endsWith('/account-types')) {
+    if (method === 'POST' && pathSegments.length === 3 && pathSegments[2] === 'account-types') {
       const body = await req.json()
       const { name, description, min_balance, profit_rate, withdrawal_rules, processing_fee, bank_account_id } = body
 
@@ -130,7 +135,8 @@ Deno.serve(async (req) => {
     }
 
     // PUT update account type
-    if (method === 'PUT' && pathSegments[pathSegments.length - 2] === 'account-types' && id) {
+    if (method === 'PUT' && pathSegments.length === 4 && pathSegments[2] === 'account-types') {
+      const id = pathSegments[3]
       const body = await req.json()
       const { name, description, min_balance, profit_rate, withdrawal_rules, processing_fee, bank_account_id } = body
 
@@ -160,7 +166,8 @@ Deno.serve(async (req) => {
     }
 
     // DELETE account type
-    if (method === 'DELETE' && pathSegments[pathSegments.length - 2] === 'account-types' && id) {
+    if (method === 'DELETE' && pathSegments.length === 4 && pathSegments[2] === 'account-types') {
+      const id = pathSegments[3]
       // Before deleting, check if any accounts are linked to this account_type
       const { data: linkedAccounts, error: checkError } = await supabase
         .from('accounts')

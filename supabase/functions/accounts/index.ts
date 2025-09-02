@@ -53,11 +53,36 @@ Deno.serve(async (req) => {
     const url = new URL(req.url)
     const method = req.method
     const pathSegments = url.pathname.split('/').filter(Boolean)
-    const id = pathSegments[pathSegments.length - 1] // Get ID for specific resource operations
 
     // GET all accounts or a specific account
-    if (method === 'GET' && pathSegments[pathSegments.length - 2] === 'accounts') {
-      if (id && id !== 'accounts') { // Get specific account
+    if (method === 'GET') {
+      // Check if this is a request for all accounts (/functions/v1/accounts)
+      if (pathSegments.length === 3 && pathSegments[2] === 'accounts') {
+        // Get all accounts
+        const { data, error } = await supabase
+          .from('accounts')
+          .select(`
+            *,
+            members(id, full_name, contact_email),
+            account_types(id, name, description, processing_fee, bank_accounts(id, name))
+          `)
+          .order('open_date', { ascending: false })
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        return new Response(
+          JSON.stringify({ accounts: data || [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      // Check if this is a request for a specific account (/functions/v1/accounts/:id)
+      else if (pathSegments.length === 4 && pathSegments[2] === 'accounts') {
+        const id = pathSegments[3]
+        // Get specific account
         const { data, error } = await supabase
           .from('accounts')
           .select(`
@@ -84,31 +109,11 @@ Deno.serve(async (req) => {
           JSON.stringify({ account: data }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
-      } else { // Get all accounts
-        const { data, error } = await supabase
-          .from('accounts')
-          .select(`
-            *,
-            members(id, full_name, contact_email),
-            account_types(id, name, description, processing_fee, bank_accounts(id, name))
-          `)
-          .order('open_date', { ascending: false })
-
-        if (error) {
-          return new Response(
-            JSON.stringify({ error: error.message }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-        return new Response(
-          JSON.stringify({ accounts: data || [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
       }
     }
 
     // POST create account
-    if (method === 'POST' && url.pathname.endsWith('/accounts')) {
+    if (method === 'POST' && pathSegments.length === 3 && pathSegments[2] === 'accounts') {
       const body = await req.json()
       const { member_id, account_type_id, account_number, balance, open_date, status } = body
 
@@ -166,7 +171,8 @@ Deno.serve(async (req) => {
     }
 
     // PUT update account
-    if (method === 'PUT' && pathSegments[pathSegments.length - 2] === 'accounts' && id) {
+    if (method === 'PUT' && pathSegments.length === 4 && pathSegments[2] === 'accounts') {
+      const id = pathSegments[3]
       const body = await req.json()
       const { member_id, account_type_id, account_number, balance, open_date, status, processing_fee_paid } = body
 
@@ -200,7 +206,8 @@ Deno.serve(async (req) => {
     }
 
     // DELETE account
-    if (method === 'DELETE' && pathSegments[pathSegments.length - 2] === 'accounts' && id) {
+    if (method === 'DELETE' && pathSegments.length === 4 && pathSegments[2] === 'accounts') {
+      const id = pathSegments[3]
       const { error } = await supabase
         .from('accounts')
         .delete()

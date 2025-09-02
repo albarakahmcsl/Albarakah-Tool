@@ -53,11 +53,32 @@ Deno.serve(async (req) => {
     const url = new URL(req.url)
     const method = req.method
     const pathSegments = url.pathname.split('/').filter(Boolean)
-    const id = pathSegments[pathSegments.length - 1] // Get ID for specific resource operations
 
     // GET all members or a specific member
-    if (method === 'GET' && pathSegments[pathSegments.length - 2] === 'members') {
-      if (id && id !== 'members') { // Get specific member
+    if (method === 'GET') {
+      // Check if this is a request for all members (/functions/v1/members)
+      if (pathSegments.length === 3 && pathSegments[2] === 'members') {
+        // Get all members
+        const { data, error } = await supabase
+          .from('members')
+          .select(`*, accounts(*)`) // Select all members and their accounts
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        return new Response(
+          JSON.stringify({ members: data || [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      // Check if this is a request for a specific member (/functions/v1/members/:id)
+      else if (pathSegments.length === 4 && pathSegments[2] === 'members') {
+        const id = pathSegments[3]
+        // Get specific member
         const { data, error } = await supabase
           .from('members')
           .select(`*, accounts(*)`) // Select member and their accounts
@@ -80,27 +101,11 @@ Deno.serve(async (req) => {
           JSON.stringify({ member: data }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
-      } else { // Get all members
-        const { data, error } = await supabase
-          .from('members')
-          .select(`*, accounts(*)`) // Select all members and their accounts
-          .order('created_at', { ascending: false })
-
-        if (error) {
-          return new Response(
-            JSON.stringify({ error: error.message }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-        return new Response(
-          JSON.stringify({ members: data || [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
       }
     }
 
     // POST create member
-    if (method === 'POST' && url.pathname.endsWith('/members')) {
+    if (method === 'POST' && pathSegments.length === 3 && pathSegments[2] === 'members') {
       const body = await req.json()
       const { full_name, contact_email, phone_number, address, user_id, status } = body
 
@@ -130,7 +135,8 @@ Deno.serve(async (req) => {
     }
 
     // PUT update member
-    if (method === 'PUT' && pathSegments[pathSegments.length - 2] === 'members' && id) {
+    if (method === 'PUT' && pathSegments.length === 4 && pathSegments[2] === 'members') {
+      const id = pathSegments[3]
       const body = await req.json()
       const { full_name, contact_email, phone_number, address, user_id, status } = body
 
@@ -160,7 +166,8 @@ Deno.serve(async (req) => {
     }
 
     // DELETE member
-    if (method === 'DELETE' && pathSegments[pathSegments.length - 2] === 'members' && id) {
+    if (method === 'DELETE' && pathSegments.length === 4 && pathSegments[2] === 'members') {
+      const id = pathSegments[3]
       const { error } = await supabase
         .from('members')
         .delete()

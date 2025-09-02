@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
         const { data, error } = await supabase
           .from('bank_accounts')
           .select('*')
-          .order('account_name', { ascending: true })
+          .order('name', { ascending: true })
 
         if (error) {
           console.error('Error fetching bank accounts:', error.message)

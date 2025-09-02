@@ -1,5 +1,5 @@
 import { supabase, getAuthHeaders } from './supabase'
-import type { User, Role, Permission, CreateUserData, UpdateUserData, CreateRoleData, UpdateRoleData, CreatePermissionData, UpdatePermissionData, PasswordValidationResult } from '../types/auth'
+import type { User, Role, Permission, CreateUserData, UpdateUserData, CreateRoleData, UpdateRoleData, CreatePermissionData, UpdatePermissionData, PasswordValidationResult, BankAccount, AccountType, Member, Account, CreateBankAccountData, UpdateBankAccountData, CreateAccountTypeData, UpdateAccountTypeData, CreateMemberData, UpdateMemberData, CreateAccountData, UpdateAccountData } from '../types/app' // Updated import path and types
 
 const API_BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
 
@@ -450,4 +450,234 @@ export const authApi = {
     console.log('[dataFetching] authApi.updatePassword SUCCESS')
     return result
   }
+}
+
+// New APIs for Membership System
+export const membersApi = {
+  async getMembers(): Promise<{ members: Member[] }> {
+    console.log('[dataFetching] membersApi.getMembers START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/members`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] membersApi.getMembers SUCCESS')
+    return result
+  },
+
+  async getMember(id: string): Promise<{ member: Member }> {
+    console.log('[dataFetching] membersApi.getMember START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/members/${id}`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] membersApi.getMember SUCCESS')
+    return result
+  },
+
+  async createMember(data: CreateMemberData): Promise<{ member: Member }> {
+    console.log('[dataFetching] membersApi.createMember START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/members`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] membersApi.createMember SUCCESS')
+    return result
+  },
+
+  async updateMember(id: string, data: UpdateMemberData): Promise<{ member: Member }> {
+    console.log('[dataFetching] membersApi.updateMember START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/members/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] membersApi.updateMember SUCCESS')
+    return result
+  },
+
+  async deleteMember(id: string): Promise<{ message: string }> {
+    console.log('[dataFetching] membersApi.deleteMember START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/members/${id}`, { method: 'DELETE', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] membersApi.deleteMember SUCCESS')
+    return result
+  },
+}
+
+export const bankAccountsApi = {
+  async getBankAccounts(): Promise<{ bank_accounts: BankAccount[] }> {
+    console.log('[dataFetching] bankAccountsApi.getBankAccounts START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/bank-accounts`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] bankAccountsApi.getBankAccounts SUCCESS')
+    return result
+  },
+
+  async getBankAccount(id: string): Promise<{ bank_account: BankAccount }> {
+    console.log('[dataFetching] bankAccountsApi.getBankAccount START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/bank-accounts/${id}`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] bankAccountsApi.getBankAccount SUCCESS')
+    return result
+  },
+
+  async createBankAccount(data: CreateBankAccountData): Promise<{ bank_account: BankAccount }> {
+    console.log('[dataFetching] bankAccountsApi.createBankAccount START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/bank-accounts`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] bankAccountsApi.createBankAccount SUCCESS')
+    return result
+  },
+
+  async updateBankAccount(id: string, data: UpdateBankAccountData): Promise<{ bank_account: BankAccount }> {
+    console.log('[dataFetching] bankAccountsApi.updateBankAccount START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/bank-accounts/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] bankAccountsApi.updateBankAccount SUCCESS')
+    return result
+  },
+
+  async deleteBankAccount(id: string): Promise<{ message: string }> {
+    console.log('[dataFetching] bankAccountsApi.deleteBankAccount START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/bank-accounts/${id}`, { method: 'DELETE', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] bankAccountsApi.deleteBankAccount SUCCESS')
+    return result
+  },
+
+  async getBankAccountSummary(id: string): Promise<{ bank_account_id: string; total_funds: number }> {
+    console.log('[dataFetching] bankAccountsApi.getBankAccountSummary START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/bank-accounts/${id}/summary`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] bankAccountsApi.getBankAccountSummary SUCCESS')
+    return result
+  },
+}
+
+export const accountTypesApi = {
+  async getAccountTypes(): Promise<{ account_types: AccountType[] }> {
+    console.log('[dataFetching] accountTypesApi.getAccountTypes START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/account-types`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountTypesApi.getAccountTypes SUCCESS')
+    return result
+  },
+
+  async getAccountType(id: string): Promise<{ account_type: AccountType }> {
+    console.log('[dataFetching] accountTypesApi.getAccountType START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/account-types/${id}`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountTypesApi.getAccountType SUCCESS')
+    return result
+  },
+
+  async createAccountType(data: CreateAccountTypeData): Promise<{ account_type: AccountType }> {
+    console.log('[dataFetching] accountTypesApi.createAccountType START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/account-types`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountTypesApi.createAccountType SUCCESS')
+    return result
+  },
+
+  async updateAccountType(id: string, data: UpdateAccountTypeData): Promise<{ account_type: AccountType }> {
+    console.log('[dataFetching] accountTypesApi.updateAccountType START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/account-types/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountTypesApi.updateAccountType SUCCESS')
+    return result
+  },
+
+  async deleteAccountType(id: string): Promise<{ message: string }> {
+    console.log('[dataFetching] accountTypesApi.deleteAccountType START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/account-types/${id}`, { method: 'DELETE', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountTypesApi.deleteAccountType SUCCESS')
+    return result
+  },
+}
+
+export const accountsApi = {
+  async getAccounts(): Promise<{ accounts: Account[] }> {
+    console.log('[dataFetching] accountsApi.getAccounts START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/accounts`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountsApi.getAccounts SUCCESS')
+    return result
+  },
+
+  async getAccount(id: string): Promise<{ account: Account }> {
+    console.log('[dataFetching] accountsApi.getAccount START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/accounts/${id}`, { method: 'GET', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountsApi.getAccount SUCCESS')
+    return result
+  },
+
+  async createAccount(data: CreateAccountData): Promise<{ account: Account }> {
+    console.log('[dataFetching] accountsApi.createAccount START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/accounts`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountsApi.createAccount SUCCESS')
+    return result
+  },
+
+  async updateAccount(id: string, data: UpdateAccountData): Promise<{ account: Account }> {
+    console.log('[dataFetching] accountsApi.updateAccount START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/accounts/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountsApi.updateAccount SUCCESS')
+    return result
+  },
+
+  async deleteAccount(id: string): Promise<{ message: string }> {
+    console.log('[dataFetching] accountsApi.deleteAccount START')
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE_URL}/accounts/${id}`, { method: 'DELETE', headers })
+    const result = await handleResponse(response)
+    console.log('[dataFetching] accountsApi.deleteAccount SUCCESS')
+    return result
+  },
 }

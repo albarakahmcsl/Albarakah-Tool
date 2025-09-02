@@ -257,7 +257,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           console.log('[AuthContext] Auth state change - Fetching profile for user:', session.user.id)
           const profile = await withTimeout(
             fetchUserProfile(session.user.id),
-            120000, // 2 minutes for auth state changes
+            300000, // 5 minutes for auth state changes
             'Profile fetch timed out during auth state change'
           )
           

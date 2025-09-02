@@ -13,14 +13,30 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Check for required environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing required environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey
+      })
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error: Missing required environment variables',
+          details: 'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured'
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Authenticate the request and check for admin role
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('Missing authorization header')
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -31,6 +47,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
+      console.error('Authentication failed:', authError?.message || 'No user found')
       return new Response(
         JSON.stringify({ error: 'Invalid authorization token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -44,6 +61,11 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
 
     if (userRolesError || !userRolesData || !userRolesData.some(ur => ur.roles?.name === 'admin')) {
+      console.error('Permission check failed:', {
+        userRolesError: userRolesError?.message,
+        userRolesData,
+        userId: user.id
+      })
       return new Response(
         JSON.stringify({ error: 'Insufficient permissions. Admin role required.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -76,6 +98,7 @@ Deno.serve(async (req) => {
         )
 
       if (totalFundsError) {
+        console.error('Error calculating total funds:', totalFundsError.message)
         return new Response(
           JSON.stringify({ error: totalFundsError.message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -100,6 +123,7 @@ Deno.serve(async (req) => {
           .single()
 
         if (error) {
+          console.error('Error fetching bank account:', error.message)
           return new Response(
             JSON.stringify({ error: error.message }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -122,6 +146,7 @@ Deno.serve(async (req) => {
           .order('name', { ascending: true })
 
         if (error) {
+          console.error('Error fetching bank accounts:', error.message)
           return new Response(
             JSON.stringify({ error: error.message }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -153,6 +178,7 @@ Deno.serve(async (req) => {
         .single()
 
       if (error) {
+        console.error('Error creating bank account:', error.message)
         return new Response(
           JSON.stringify({ error: error.message }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -177,6 +203,7 @@ Deno.serve(async (req) => {
         .single()
 
       if (error) {
+        console.error('Error updating bank account:', error.message)
         return new Response(
           JSON.stringify({ error: error.message }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -204,6 +231,7 @@ Deno.serve(async (req) => {
         .limit(1)
 
       if (checkError) {
+        console.error('Error checking linked account types:', checkError.message)
         return new Response(
           JSON.stringify({ error: checkError.message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -223,6 +251,7 @@ Deno.serve(async (req) => {
         .eq('id', id)
 
       if (error) {
+        console.error('Error deleting bank account:', error.message)
         return new Response(
           JSON.stringify({ error: error.message }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -234,6 +263,7 @@ Deno.serve(async (req) => {
       )
     }
 
+    console.error('Invalid request:', { method, pathname: url.pathname, pathSegments })
     return new Response(
       JSON.stringify({ error: 'Method not allowed or invalid path' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -241,6 +271,11 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in bank-accounts function:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

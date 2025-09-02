@@ -152,14 +152,24 @@ const membersLoader = async () => {
 const bankAccountsLoader = async () => { // New: Loader for BankAccountsPage
   console.log('[App] bankAccountsLoader START')
   try {
+    // Only fetch bank accounts data if we're actually on the bank-accounts route
+    // This prevents unnecessary API calls on other routes
     const bankAccountsData = await queryClient.fetchQuery({
       queryKey: queryKeys.bankAccounts(),
       queryFn: bankAccountsApi.getBankAccounts,
+      retry: 1, // Reduce retries for faster error handling
+      retryDelay: 500, // Shorter retry delay
     })
     console.log('[App] bankAccountsLoader SUCCESS')
     return { bankAccounts: bankAccountsData.bank_accounts }
   } catch (error) {
     console.error('[App] bankAccountsLoader ERROR:', error)
+    // Provide more detailed error information
+    console.error('[App] bankAccountsLoader ERROR details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return { bankAccounts: [] }
   }
 }

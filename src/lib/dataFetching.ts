@@ -511,11 +511,34 @@ export const membersApi = {
 export const bankAccountsApi = {
   async getBankAccounts(): Promise<{ bank_accounts: BankAccount[] }> {
     console.log('[dataFetching] bankAccountsApi.getBankAccounts START')
-    const headers = await getAuthHeaders()
-    const response = await fetch(`${API_BASE_URL}/bank-accounts`, { method: 'GET', headers })
-    const result = await handleResponse(response)
-    console.log('[dataFetching] bankAccountsApi.getBankAccounts SUCCESS')
-    return result
+    
+    try {
+      const headers = await getAuthHeaders()
+      console.log('[dataFetching] Making request to:', `${API_BASE_URL}/bank-accounts`)
+      console.log('[dataFetching] Headers:', headers)
+      
+      const response = await fetch(`${API_BASE_URL}/bank-accounts`, { 
+        method: 'GET', 
+        headers,
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      })
+      
+      console.log('[dataFetching] Response status:', response.status)
+      console.log('[dataFetching] Response ok:', response.ok)
+      
+      const result = await handleResponse(response)
+      console.log('[dataFetching] bankAccountsApi.getBankAccounts SUCCESS')
+      return result
+    } catch (error) {
+      console.error('[dataFetching] bankAccountsApi.getBankAccounts ERROR:', error)
+      console.error('[dataFetching] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
+      throw error
+    }
   },
 
   async getBankAccount(id: string): Promise<{ bank_account: BankAccount }> {

@@ -52,12 +52,24 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url)
     const method = req.method
-    const pathSegments = url.pathname.split('/').filter(Boolean)
+    const allPathSegments = url.pathname.split('/').filter(Boolean)
+    
+    // Find the index of 'members' in the path
+    const membersIndex = allPathSegments.findIndex(segment => segment === 'members')
+    if (membersIndex === -1) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid path: members not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    // Get path segments relative to members
+    const pathSegments = allPathSegments.slice(membersIndex)
 
     // GET all members or a specific member
     if (method === 'GET') {
-      // Check if this is a request for all members (/functions/v1/members)
-      if (pathSegments.length === 3 && pathSegments[2] === 'members') {
+      // Check if this is a request for all members (/members)
+      if (pathSegments.length === 1) {
         // Get all members
         const { data, error } = await supabase
           .from('members')
@@ -75,9 +87,9 @@ Deno.serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-      // Check if this is a request for a specific member (/functions/v1/members/:id)
-      else if (pathSegments.length === 4 && pathSegments[2] === 'members') {
-        const id = pathSegments[3]
+      // Check if this is a request for a specific member (/members/:id)
+      else if (pathSegments.length === 2) {
+        const id = pathSegments[1]
         // Get specific member
         const { data, error } = await supabase
           .from('members')
@@ -105,7 +117,7 @@ Deno.serve(async (req) => {
     }
 
     // POST create member
-    if (method === 'POST' && pathSegments.length === 3 && pathSegments[2] === 'members') {
+    if (method === 'POST' && pathSegments.length === 1) {
       const body = await req.json()
       const { full_name, contact_email, phone_number, address, user_id, status } = body
 
@@ -135,8 +147,8 @@ Deno.serve(async (req) => {
     }
 
     // PUT update member
-    if (method === 'PUT' && pathSegments.length === 4 && pathSegments[2] === 'members') {
-      const id = pathSegments[3]
+    if (method === 'PUT' && pathSegments.length === 2) {
+      const id = pathSegments[1]
       const body = await req.json()
       const { full_name, contact_email, phone_number, address, user_id, status } = body
 
@@ -166,8 +178,8 @@ Deno.serve(async (req) => {
     }
 
     // DELETE member
-    if (method === 'DELETE' && pathSegments.length === 4 && pathSegments[2] === 'members') {
-      const id = pathSegments[3]
+    if (method === 'DELETE' && pathSegments.length === 2) {
+      const id = pathSegments[1]
       const { error } = await supabase
         .from('members')
         .delete()

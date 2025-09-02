@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
         const { data, error } = await supabase
           .from('bank_accounts')
           .select('*')
-          .order('name', { ascending: true })
+          .order('account_name', { ascending: true })
 
         if (error) {
           console.error('Error fetching bank accounts:', error.message)
@@ -179,18 +179,26 @@ Deno.serve(async (req) => {
     // POST create bank account
     if (method === 'POST' && pathSegments.length === 1) {
       const body = await req.json()
-      const { name, account_number, description } = body
+      const { account_name, account_number, bank_name, account_type, balance, currency, is_active } = body
 
-      if (!name || !account_number) {
+      if (!account_name || !account_number || !bank_name || !account_type) {
         return new Response(
-          JSON.stringify({ error: 'Name and account number are required' }),
+          JSON.stringify({ error: 'Account name, account number, bank name, and account type are required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
       const { data: newBankAccount, error } = await supabase
         .from('bank_accounts')
-        .insert({ name, account_number, description })
+        .insert({ 
+          account_name, 
+          account_number, 
+          bank_name, 
+          account_type, 
+          balance: balance || 0, 
+          currency: currency || 'USD', 
+          is_active: is_active !== undefined ? is_active : true 
+        })
         .select('*')
         .single()
 
@@ -211,11 +219,19 @@ Deno.serve(async (req) => {
     if (method === 'PUT' && pathSegments.length === 2) {
       const id = pathSegments[1]
       const body = await req.json()
-      const { name, account_number, description } = body
+      const { account_name, account_number, bank_name, account_type, balance, currency, is_active } = body
 
+      const updateData = {}
+      if (account_name !== undefined) updateData.account_name = account_name
+      if (account_number !== undefined) updateData.account_number = account_number
+      if (bank_name !== undefined) updateData.bank_name = bank_name
+      if (account_type !== undefined) updateData.account_type = account_type
+      if (balance !== undefined) updateData.balance = balance
+      if (currency !== undefined) updateData.currency = currency
+      if (is_active !== undefined) updateData.is_active = is_active
       const { data: updatedBankAccount, error } = await supabase
         .from('bank_accounts')
-        .update({ name, account_number, description })
+        .update(updateData)
         .eq('id', id)
         .select('*')
         .single()

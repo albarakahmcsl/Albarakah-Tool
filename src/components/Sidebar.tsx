@@ -11,6 +11,7 @@ import {
   BarChart3,
   Shield,
   Key,
+  UserRoundCog, // New icon for Member Management
 } from 'lucide-react'
 
 interface NavItem {
@@ -50,6 +51,12 @@ const navigation: NavItem[] = [
     href: '/admin/permissions',
     icon: Key,
     permission: { resource: 'permissions', action: 'manage' }
+  },
+  {
+    name: 'Member Management', // New: Member Management link
+    href: '/members',
+    icon: UserRoundCog, // Using UserRoundCog icon
+    permission: { resource: 'members', action: 'manage' }
   },
   {
     name: 'Reports',

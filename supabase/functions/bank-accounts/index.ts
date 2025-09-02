@@ -74,11 +74,23 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url)
     const method = req.method
-    const pathSegments = url.pathname.split('/').filter(Boolean)
+    const allPathSegments = url.pathname.split('/').filter(Boolean)
+    
+    // Find the index of 'bank-accounts' in the path
+    const bankAccountsIndex = allPathSegments.findIndex(segment => segment === 'bank-accounts')
+    if (bankAccountsIndex === -1) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid path: bank-accounts not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    // Get path segments relative to bank-accounts
+    const pathSegments = allPathSegments.slice(bankAccountsIndex)
 
-    // Handle /bank-accounts/:id/summary endpoint
-    if (method === 'GET' && pathSegments.length === 5 && pathSegments[2] === 'bank-accounts' && pathSegments[4] === 'summary') {
-      const bankAccountId = pathSegments[3]; // Get the actual bank_account_id
+    // Handle /bank-accounts/:id/summary endpoint  
+    if (method === 'GET' && pathSegments.length === 3 && pathSegments[2] === 'summary') {
+      const bankAccountId = pathSegments[1]; // Get the actual bank_account_id
       if (!bankAccountId) {
         return new Response(
           JSON.stringify({ error: 'Bank account ID is required for summary' }),
@@ -114,8 +126,8 @@ Deno.serve(async (req) => {
 
     // GET all bank accounts or a specific bank account
     if (method === 'GET') {
-      // Check if this is a request for all bank accounts (/functions/v1/bank-accounts)
-      if (pathSegments.length === 3 && pathSegments[2] === 'bank-accounts') {
+      // Check if this is a request for all bank accounts (/bank-accounts)
+      if (pathSegments.length === 1) {
         // Get all bank accounts
         const { data, error } = await supabase
           .from('bank_accounts')
@@ -134,9 +146,9 @@ Deno.serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-      // Check if this is a request for a specific bank account (/functions/v1/bank-accounts/:id)
-      else if (pathSegments.length === 4 && pathSegments[2] === 'bank-accounts') {
-        const id = pathSegments[3]
+      // Check if this is a request for a specific bank account (/bank-accounts/:id)
+      else if (pathSegments.length === 2) {
+        const id = pathSegments[1]
         // Get specific bank account
         const { data, error } = await supabase
           .from('bank_accounts')
@@ -165,7 +177,7 @@ Deno.serve(async (req) => {
     }
 
     // POST create bank account
-    if (method === 'POST' && pathSegments.length === 3 && pathSegments[2] === 'bank-accounts') {
+    if (method === 'POST' && pathSegments.length === 1) {
       const body = await req.json()
       const { name, account_number, description } = body
 
@@ -196,8 +208,8 @@ Deno.serve(async (req) => {
     }
 
     // PUT update bank account
-    if (method === 'PUT' && pathSegments.length === 4 && pathSegments[2] === 'bank-accounts') {
-      const id = pathSegments[3]
+    if (method === 'PUT' && pathSegments.length === 2) {
+      const id = pathSegments[1]
       const body = await req.json()
       const { name, account_number, description } = body
 
@@ -228,8 +240,8 @@ Deno.serve(async (req) => {
     }
 
     // DELETE bank account
-    if (method === 'DELETE' && pathSegments.length === 4 && pathSegments[2] === 'bank-accounts') {
-      const id = pathSegments[3]
+    if (method === 'DELETE' && pathSegments.length === 2) {
+      const id = pathSegments[1]
       // Before deleting, check if any account_types are linked to this bank_account
       const { data: linkedAccountTypes, error: checkError } = await supabase
         .from('account_types')
@@ -270,7 +282,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.error('Invalid request:', { method, pathname: url.pathname, pathSegments })
+    console.error('Invalid request:', { method, pathname: url.pathname, pathSegments, allPathSegments })
     return new Response(
       JSON.stringify({ error: 'Method not allowed or invalid path' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

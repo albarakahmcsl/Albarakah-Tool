@@ -367,18 +367,21 @@ function EditAccountModal({
   account,
   members,
   accountTypes,
+  bankAccounts,
   onClose, 
   onSubmit 
 }: { 
   account: Account
   members: Member[]
   accountTypes: AccountType[]
+  bankAccounts: BankAccount[]
   onClose: () => void
   onSubmit: (accountData: UpdateAccountData) => void
 }) {
   const [formData, setFormData] = useState<UpdateAccountData>({
     member_id: account.member_id,
     account_type_id: account.account_type_id,
+    bank_account_id: account.bank_account_id,
     account_number: account.account_number,
     balance: account.balance,
     open_date: account.open_date.split('T')[0], // Format to YYYY-MM-DD for date input

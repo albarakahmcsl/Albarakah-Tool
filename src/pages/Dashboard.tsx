@@ -49,7 +49,7 @@ const defaultStats = [
   },
 ]
 
-export function Dashboard() {
+export default function Dashboard() {
   const { user } = useAuth()
   const loaderData = useLoaderData() as { stats: any[]; activity: any[] }
 

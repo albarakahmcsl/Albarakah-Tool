@@ -11,12 +11,12 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { ForcePasswordChangePage } from './pages/ForcePasswordChangePage'
 
 // Lazy load page components for better performance
-const Dashboard = React.lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })))
-const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard })))
-const AdminUsers = React.lazy(() => import('./pages/AdminUsers').then(module => ({ default: module.AdminUsers })))
-const AdminRoles = React.lazy(() => import('./pages/AdminRoles').then(module => ({ default: module.AdminRoles })))
-const AdminPermissions = React.lazy(() => import('./pages/AdminPermissions').then(module => ({ default: module.AdminPermissions })))
-const ProfilePage = React.lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })))
+const Dashboard = React.lazy(() => import('./pages/Dashboard'))
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'))
+const AdminUsers = React.lazy(() => import('./pages/AdminUsers'))
+const AdminRoles = React.lazy(() => import('./pages/AdminRoles'))
+const AdminPermissions = React.lazy(() => import('./pages/AdminPermissions'))
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
 
 // Loading fallback component
 const PageLoadingFallback = () => (

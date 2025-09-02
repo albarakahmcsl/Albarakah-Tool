@@ -88,7 +88,7 @@ const quickActions = [
   },
 ]
 
-export function AdminDashboard() {
+export default function AdminDashboard() {
   const { user } = useAuth()
 
   return (

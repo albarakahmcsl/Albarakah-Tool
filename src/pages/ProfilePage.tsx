@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { User, Mail, Edit, CheckCircle, AlertCircle, Shield } from 'lucide-react'
 import ChangePasswordForm from '../components/ChangePasswordForm'
 
-export function ProfilePage() {
+export default function ProfilePage() {
   const { user, refreshUser } = useAuth()
   const [fullName, setFullName] = useState(user?.full_name || '')
   const [isEditing, setIsEditing] = useState(false)

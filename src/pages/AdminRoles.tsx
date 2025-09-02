@@ -5,7 +5,7 @@ import { Plus, Search, Edit, Trash2, Shield, Users } from 'lucide-react'
 import { adminRolesApi, adminPermissionsApi, ApiError } from '../lib/dataFetching'
 import type { Role, Permission, CreateRoleData, UpdateRoleData } from '../types/auth'
 
-export function AdminRoles() {
+export default function AdminRoles() {
   const queryClient = useQueryClient()
   
   const [searchTerm, setSearchTerm] = useState('')

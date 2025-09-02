@@ -7,7 +7,7 @@ import { adminUsersApi, adminRolesApi, ApiError } from '../lib/dataFetching'
 import { generateTemporaryPassword } from '../utils/validation'
 import type { User, Role, CreateUserData, UpdateUserData } from '../types/auth'
 
-export function AdminUsers() {
+export default function AdminUsers() {
   const queryClient = useQueryClient()
   const loaderData = useLoaderData() as { users: User[]; roles: Role[] }
   

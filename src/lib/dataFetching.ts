@@ -26,7 +26,7 @@ export const userProfileApi = {
     console.log('[dataFetching] fetchUserProfile START - userId:', userId)
     
     try {
-      // Step 1: Fetch user basic profile and role IDs
+      // Step 1: Fetch user profile with roles in a single query
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select(`
@@ -39,7 +39,15 @@ export const userProfileApi = {
           sub_menu_access,
           component_access,
           created_at,
-          updated_at
+          updated_at,
+          user_roles(
+            role_id,
+            roles(
+              id,
+              name,
+              description
+            )
+          )
         `)
         .eq('id', userId)
         .single()
@@ -54,36 +62,11 @@ export const userProfileApi = {
         throw new Error('User profile not found')
       }
       
-      // Step 2: Fetch user role IDs
-      const { data: userRoles, error: userRolesError } = await supabase
-        .from('user_roles')
-        .select('role_id')
-        .eq('user_id', userId)
-
-      if (userRolesError) {
-        console.error('[dataFetching] fetchUserProfile USER_ROLES ERROR:', userRolesError)
-        throw userRolesError
-      }
-
-      const roleIds = userRoles?.map(ur => ur.role_id) || []
+      // Step 2: Extract roles from the joined data
+      const roles = userData.user_roles?.map(ur => ur.roles).filter(Boolean) || []
+      const roleIds = roles.map(role => role.id)
       
-      // Step 3: Fetch role details if user has roles
-      let roles = []
-      if (roleIds.length > 0) {
-        const { data: rolesData, error: rolesError } = await supabase
-          .from('roles')
-          .select('id, name, description')
-          .in('id', roleIds)
-
-        if (rolesError) {
-          console.error('[dataFetching] fetchUserProfile ROLES ERROR:', rolesError)
-          throw rolesError
-        }
-
-        roles = rolesData || []
-      }
-      
-      // Step 4: Fetch permissions for these roles if roles exist
+      // Step 3: Fetch permissions for these roles if roles exist
       let uniquePermissions = []
       if (roleIds.length > 0) {
         const { data: rolePermissions, error: permissionsError } = await supabase
@@ -112,8 +95,11 @@ export const userProfileApi = {
         )
       }
       
+      // Remove the user_roles join data from the final object
+      const { user_roles, ...userDataWithoutJoins } = userData
+      
       const transformedUser = {
-        ...userData,
+        ...userDataWithoutJoins,
         roles,
         role_ids: roleIds,
         permissions: uniquePermissions

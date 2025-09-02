@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { queryClient, queryKeys } from './lib/queryClient'
-import { dashboardApi, adminUsersApi, rolesApi, adminRolesApi, adminPermissionsApi, membersApi } from './lib/dataFetching' // Add membersApi
+import { dashboardApi, adminUsersApi, rolesApi, adminRolesApi, adminPermissionsApi, membersApi, bankAccountsApi, accountTypesApi, accountsApi } from './lib/dataFetching' // Add new APIs
 import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
@@ -17,7 +17,10 @@ const AdminUsers = React.lazy(() => import('./pages/AdminUsers'))
 const AdminRoles = React.lazy(() => import('./pages/AdminRoles'))
 const AdminPermissions = React.lazy(() => import('./pages/AdminPermissions'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
-const MembersPage = React.lazy(() => import('./pages/MembersPage')) // New: Import MembersPage
+const MembersPage = React.lazy(() => import('./pages/MembersPage'))
+const BankAccountsPage = React.lazy(() => import('./pages/BankAccountsPage')) // New: Import BankAccountsPage
+const AccountTypesPage = React.lazy(() => import('./pages/AccountTypesPage')) // New: Import AccountTypesPage
+const AccountsPage = React.lazy(() => import('./pages/AccountsPage')) // New: Import AccountsPage
 
 // Loading fallback component
 const PageLoadingFallback = () => (
@@ -131,7 +134,7 @@ const adminPermissionsLoader = async () => {
   }
 }
 
-const membersLoader = async () => { // New: Loader for MembersPage
+const membersLoader = async () => {
   console.log('[App] membersLoader START')
   try {
     const membersData = await queryClient.fetchQuery({
@@ -143,6 +146,67 @@ const membersLoader = async () => { // New: Loader for MembersPage
   } catch (error) {
     console.error('[App] membersLoader ERROR:', error)
     return { members: [] }
+  }
+}
+
+const bankAccountsLoader = async () => { // New: Loader for BankAccountsPage
+  console.log('[App] bankAccountsLoader START')
+  try {
+    const bankAccountsData = await queryClient.fetchQuery({
+      queryKey: queryKeys.bankAccounts(),
+      queryFn: bankAccountsApi.getBankAccounts,
+    })
+    console.log('[App] bankAccountsLoader SUCCESS')
+    return { bankAccounts: bankAccountsData.bank_accounts }
+  } catch (error) {
+    console.error('[App] bankAccountsLoader ERROR:', error)
+    return { bankAccounts: [] }
+  }
+}
+
+const accountTypesLoader = async () => { // New: Loader for AccountTypesPage
+  console.log('[App] accountTypesLoader START')
+  try {
+    const [accountTypesData, bankAccountsData] = await Promise.all([
+      queryClient.fetchQuery({
+        queryKey: queryKeys.accountTypes(),
+        queryFn: accountTypesApi.getAccountTypes,
+      }),
+      queryClient.fetchQuery({
+        queryKey: queryKeys.bankAccounts(),
+        queryFn: bankAccountsApi.getBankAccounts,
+      }),
+    ])
+    console.log('[App] accountTypesLoader SUCCESS')
+    return { accountTypes: accountTypesData.account_types, bankAccounts: bankAccountsData.bank_accounts }
+  } catch (error) {
+    console.error('[App] accountTypesLoader ERROR:', error)
+    return { accountTypes: [], bankAccounts: [] }
+  }
+}
+
+const accountsLoader = async () => { // New: Loader for AccountsPage
+  console.log('[App] accountsLoader START')
+  try {
+    const [accountsData, membersData, accountTypesData] = await Promise.all([
+      queryClient.fetchQuery({
+        queryKey: queryKeys.accounts(),
+        queryFn: accountsApi.getAccounts,
+      }),
+      queryClient.fetchQuery({
+        queryKey: queryKeys.members(),
+        queryFn: membersApi.getMembers,
+      }),
+      queryClient.fetchQuery({
+        queryKey: queryKeys.accountTypes(),
+        queryFn: accountTypesApi.getAccountTypes,
+      }),
+    ])
+    console.log('[App] accountsLoader SUCCESS')
+    return { accounts: accountsData.accounts, members: membersData.members, accountTypes: accountTypesData.account_types }
+  } catch (error) {
+    console.error('[App] accountsLoader ERROR:', error)
+    return { accounts: [], members: [], accountTypes: [] }
   }
 }
 
@@ -237,7 +301,7 @@ const router = createBrowserRouter([
         hydrateFallbackElement: <PageLoadingFallback />,
       },
       {
-        path: 'members', // New: Route for MembersPage
+        path: 'members',
         element: (
           <ProtectedRoute requiredPermission={{ resource: 'members', action: 'manage' }}>
             <Suspense fallback={<PageLoadingFallback />}>
@@ -245,7 +309,43 @@ const router = createBrowserRouter([
             </Suspense>
           </ProtectedRoute>
         ),
-        loader: membersLoader, // New: Add loader for MembersPage
+        loader: membersLoader,
+        hydrateFallbackElement: <PageLoadingFallback />,
+      },
+      {
+        path: 'bank-accounts', // New: Route for BankAccountsPage
+        element: (
+          <ProtectedRoute requiredPermission={{ resource: 'bank_accounts', action: 'manage' }}>
+            <Suspense fallback={<PageLoadingFallback />}>
+              <BankAccountsPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+        loader: bankAccountsLoader,
+        hydrateFallbackElement: <PageLoadingFallback />,
+      },
+      {
+        path: 'account-types', // New: Route for AccountTypesPage
+        element: (
+          <ProtectedRoute requiredPermission={{ resource: 'account_types', action: 'manage' }}>
+            <Suspense fallback={<PageLoadingFallback />}>
+              <AccountTypesPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+        loader: accountTypesLoader,
+        hydrateFallbackElement: <PageLoadingFallback />,
+      },
+      {
+        path: 'accounts', // New: Route for AccountsPage
+        element: (
+          <ProtectedRoute requiredPermission={{ resource: 'accounts', action: 'manage' }}>
+            <Suspense fallback={<PageLoadingFallback />}>
+              <AccountsPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+        loader: accountsLoader,
         hydrateFallbackElement: <PageLoadingFallback />,
       },
       {

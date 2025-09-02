@@ -26,8 +26,8 @@ export const userProfileApi = {
     console.log('[dataFetching] fetchUserProfile START - userId:', userId)
     
     try {
-      // Optimized query with proper joins for complete user data
-      const { data, error } = await supabase
+      // Step 1: Fetch user basic profile and role IDs
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select(`
           id, 
@@ -39,53 +39,83 @@ export const userProfileApi = {
           sub_menu_access,
           component_access,
           created_at,
-          updated_at,
-          user_roles(
-            roles!inner(
-              id, 
-              name, 
-              description,
-              role_permissions(
-                permissions!inner(
-                  id,
-                  resource,
-                  action,
-                  description
-                )
-              )
-            )
-          )
+          updated_at
         `)
         .eq('id', userId)
         .single()
 
-      if (error) {
-        console.error('[dataFetching] fetchUserProfile ERROR:', error)
-        throw error
+      if (userError) {
+        console.error('[dataFetching] fetchUserProfile USER ERROR:', userError)
+        throw userError
       }
       
-      if (!data) {
+      if (!userData) {
         console.log('[dataFetching] fetchUserProfile - No profile found for user:', userId)
         throw new Error('User profile not found')
       }
       
-      // Transform the data to match our User interface
-      const roles = data.user_roles?.map(ur => ur.roles).filter(Boolean) || []
+      // Step 2: Fetch user role IDs
+      const { data: userRoles, error: userRolesError } = await supabase
+        .from('user_roles')
+        .select('role_id')
+        .eq('user_id', userId)
+
+      if (userRolesError) {
+        console.error('[dataFetching] fetchUserProfile USER_ROLES ERROR:', userRolesError)
+        throw userRolesError
+      }
+
+      const roleIds = userRoles?.map(ur => ur.role_id) || []
       
-      // Flatten all permissions from all roles
-      const allPermissions = roles.flatMap(role => 
-        role.role_permissions?.map(rp => rp.permissions).filter(Boolean) || []
-      )
+      // Step 3: Fetch role details if user has roles
+      let roles = []
+      if (roleIds.length > 0) {
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('roles')
+          .select('id, name, description')
+          .in('id', roleIds)
+
+        if (rolesError) {
+          console.error('[dataFetching] fetchUserProfile ROLES ERROR:', rolesError)
+          throw rolesError
+        }
+
+        roles = rolesData || []
+      }
       
-      // Remove duplicate permissions based on resource + action combination
-      const uniquePermissions = allPermissions.filter((permission, index, array) => 
-        array.findIndex(p => p.resource === permission.resource && p.action === permission.action) === index
-      )
+      // Step 4: Fetch permissions for these roles if roles exist
+      let uniquePermissions = []
+      if (roleIds.length > 0) {
+        const { data: rolePermissions, error: permissionsError } = await supabase
+          .from('role_permissions')
+          .select(`
+            permissions(
+              id,
+              resource,
+              action,
+              description
+            )
+          `)
+          .in('role_id', roleIds)
+
+        if (permissionsError) {
+          console.error('[dataFetching] fetchUserProfile PERMISSIONS ERROR:', permissionsError)
+          throw permissionsError
+        }
+
+        // Flatten all permissions from all roles
+        const allPermissions = rolePermissions?.map(rp => rp.permissions).filter(Boolean) || []
+      
+        // Remove duplicate permissions based on resource + action combination
+        uniquePermissions = allPermissions.filter((permission, index, array) => 
+          array.findIndex(p => p.resource === permission.resource && p.action === permission.action) === index
+        )
+      }
       
       const transformedUser = {
-        ...data,
+        ...userData,
         roles,
-        role_ids: roles.map(role => role.id),
+        role_ids: roleIds,
         permissions: uniquePermissions
       }
       

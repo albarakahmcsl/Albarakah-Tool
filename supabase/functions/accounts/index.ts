@@ -64,7 +64,8 @@ Deno.serve(async (req) => {
           .select(`
             *,
             members(id, full_name, contact_email),
-            account_types(id, name, description, processing_fee, bank_accounts(id, name))
+            account_types(id, name, description, processing_fee, bank_accounts(id, account_name)),
+            bank_accounts(id, account_name, account_number)
           `)
           .order('open_date', { ascending: false })
 
@@ -88,7 +89,8 @@ Deno.serve(async (req) => {
           .select(`
             *,
             members(id, full_name, contact_email),
-            account_types(id, name, description, processing_fee, bank_accounts(id, name))
+            account_types(id, name, description, processing_fee, bank_accounts(id, account_name)),
+            bank_accounts(id, account_name, account_number)
           `)
           .eq('id', id)
           .single()
@@ -154,7 +156,8 @@ Deno.serve(async (req) => {
         .select(`
           *,
           members(id, full_name, contact_email),
-          account_types(id, name, description, processing_fee, bank_accounts(id, name))
+          account_types(id, name, description, processing_fee, bank_accounts(id, account_name)),
+          bank_accounts(id, account_name, account_number)
         `)
         .single()
 
@@ -183,7 +186,8 @@ Deno.serve(async (req) => {
         .select(`
           *,
           members(id, full_name, contact_email),
-          account_types(id, name, description, processing_fee, bank_accounts(id, name))
+          account_types(id, name, description, processing_fee, bank_accounts(id, account_name)),
+          bank_accounts(id, account_name, account_number)
         `)
         .single()
 

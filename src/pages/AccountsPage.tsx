@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '../lib/queryClient'
 import { accountsApi, membersApi, accountTypesApi, ApiError } from '../lib/dataFetching'
 import { Plus, Search, Edit, Trash2, Wallet, User, Layers, Calendar, DollarSign, CheckCircle, XCircle } from 'lucide-react'
+import { Landmark } from 'lucide-react'
 import type { Account, CreateAccountData, UpdateAccountData, Member, AccountType } from '../types/app'
 
 export default function AccountsPage() {
@@ -367,21 +368,18 @@ function EditAccountModal({
   account,
   members,
   accountTypes,
-  bankAccounts,
   onClose, 
   onSubmit 
 }: { 
   account: Account
   members: Member[]
   accountTypes: AccountType[]
-  bankAccounts: BankAccount[]
   onClose: () => void
   onSubmit: (accountData: UpdateAccountData) => void
 }) {
   const [formData, setFormData] = useState<UpdateAccountData>({
     member_id: account.member_id,
     account_type_id: account.account_type_id,
-    bank_account_id: account.bank_account_id,
     account_number: account.account_number,
     balance: account.balance,
     open_date: account.open_date.split('T')[0], // Format to YYYY-MM-DD for date input

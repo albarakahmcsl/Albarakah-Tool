@@ -130,6 +130,7 @@ export interface Account {
   id: string
   member_id: string
   account_type_id: string
+  bank_account_id: string | null
   account_number: string
   balance: number
   open_date: string
@@ -139,6 +140,7 @@ export interface Account {
   updated_at: string
   members?: Member // Joined data
   account_types?: AccountType // Joined data
+  bank_accounts?: BankAccount // Joined data
 }
 
 // Data transfer objects for creating/updating new entities

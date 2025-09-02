@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { queryClient, queryKeys } from './lib/queryClient'
-import { dashboardApi, adminUsersApi, rolesApi } from './lib/dataFetching'
+import { dashboardApi, adminUsersApi, rolesApi, adminRolesApi, adminPermissionsApi } from './lib/dataFetching'
 import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'

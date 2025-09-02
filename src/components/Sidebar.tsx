@@ -11,7 +11,10 @@ import {
   BarChart3,
   Shield,
   Key,
-  UserRoundCog, // New icon for Member Management
+  UserRoundCog,
+  Landmark, // New icon for Bank Accounts
+  Layers, // New icon for Account Types
+  Wallet, // New icon for Accounts
 } from 'lucide-react'
 
 interface NavItem {
@@ -53,10 +56,28 @@ const navigation: NavItem[] = [
     permission: { resource: 'permissions', action: 'manage' }
   },
   {
-    name: 'Member Management', // New: Member Management link
+    name: 'Member Management',
     href: '/members',
-    icon: UserRoundCog, // Using UserRoundCog icon
+    icon: UserRoundCog,
     permission: { resource: 'members', action: 'manage' }
+  },
+  {
+    name: 'Bank Accounts', // New: Bank Accounts link
+    href: '/bank-accounts',
+    icon: Landmark,
+    permission: { resource: 'bank_accounts', action: 'manage' }
+  },
+  {
+    name: 'Account Types', // New: Account Types link
+    href: '/account-types',
+    icon: Layers,
+    permission: { resource: 'account_types', action: 'manage' }
+  },
+  {
+    name: 'Accounts', // New: Accounts link
+    href: '/accounts',
+    icon: Wallet,
+    permission: { resource: 'accounts', action: 'manage' }
   },
   {
     name: 'Reports',

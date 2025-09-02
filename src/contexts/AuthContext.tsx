@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '../lib/supabase'
 import { authApi, userProfileApi } from '../lib/dataFetching'
 import { withTimeout } from '../utils/helpers'
+import { clearPermissionCache } from '../utils/permissions'
 
 // Cache keys for localStorage
 const USER_CACHE_KEY = 'auth_user_profile'
@@ -130,6 +131,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.log('[AuthContext] Background refresh - No valid session, clearing cache')
             setUser(null)
             setCachedUser(null)
+            clearPermissionCache()
             await supabase.auth.signOut()
             return
           }
@@ -146,6 +148,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.log('[AuthContext] Background refresh - User account is inactive, signing out')
             setUser(null)
             setCachedUser(null)
+            clearPermissionCache()
             await supabase.auth.signOut()
             return
           }
@@ -155,6 +158,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.log('[AuthContext] Background refresh - Data changed, updating user')
             setUser(freshProfile)
             setCachedUser(freshProfile)
+            clearPermissionCache()
           } else {
             console.log('[AuthContext] Background refresh - No changes detected')
           }
@@ -205,17 +209,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.log('[AuthContext] init - User account is inactive')
             setUser(null)
             setCachedUser(null)
+            clearPermissionCache()
             await supabase.auth.signOut()
             return
           }
           
           setUser(profile)
           setCachedUser(profile)
+          clearPermissionCache()
           console.log('[AuthContext] init - Profile set:', profile)
         } else {
           console.log('[AuthContext] init - No session found')
           setUser(null)
           setCachedUser(null)
+          clearPermissionCache()
           // Ensure clean state if no session
           await supabase.auth.signOut()
         }
@@ -227,6 +234,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           console.error('[AuthContext] init - CATCH ERROR:', err)
           setUser(null)
           setCachedUser(null)
+          clearPermissionCache()
           // Clear any invalid tokens on error
           await supabase.auth.signOut()
         }
@@ -258,17 +266,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.log('[AuthContext] Auth state change - User account is inactive, signing out')
             setUser(null)
             setCachedUser(null)
+            clearPermissionCache()
             await supabase.auth.signOut()
             return
           }
           
           setUser(profile)
           setCachedUser(profile)
+          clearPermissionCache()
           console.log('[AuthContext] Auth state change - Profile set:', profile)
         } else {
           console.log('[AuthContext] Auth state change - No session, clearing user')
           setUser(null)
           setCachedUser(null)
+          clearPermissionCache()
         }
         
         // Set loading to false after auth state change is processed
@@ -329,6 +340,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         setUser(profile)
         setCachedUser(profile)
+        clearPermissionCache()
         console.log('[AuthContext] signIn SUCCESS - user set:', profile)
       }
     } catch (err: any) {
@@ -430,16 +442,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.log('[AuthContext] refreshUser - User account is inactive, signing out')
             setUser(null)
             setCachedUser(null)
+            clearPermissionCache()
             await supabase.auth.signOut()
             return
           }
           
           setUser(profile)
           setCachedUser(profile)
+          clearPermissionCache()
           console.log('[AuthContext] refreshUser SUCCESS - profile updated:', profile)
           
-          // Clear permission cache when user data changes
-          clearPermissionCache()
         } catch (timeoutErr) {
           console.error('[AuthContext] refreshUser - TIMEOUT during refresh:', timeoutErr)
           setError('Profile refresh timed out. Using existing data.')
@@ -448,6 +460,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log('[AuthContext] refreshUser - No session user found')
         setUser(null)
         setCachedUser(null)
+        clearPermissionCache()
       }
     } catch (err) {
       console.error('[AuthContext] refreshUser ERROR:', err)

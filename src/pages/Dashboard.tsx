@@ -11,8 +11,23 @@ import {
   DollarSign, 
   FileText,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Activity,
+  AlertTriangle
 } from 'lucide-react'
+
+// Safe icon wrapper component
+const SafeIcon = ({ IconComponent, className, fallbackIcon: FallbackIcon = AlertTriangle }: { 
+  IconComponent: any, 
+  className: string,
+  fallbackIcon?: any 
+}) => {
+  if (!IconComponent || typeof IconComponent !== 'function') {
+    console.warn('[Dashboard] Icon component is undefined, using fallback')
+    return <FallbackIcon className={className} />
+  }
+  return <IconComponent className={className} />
+}
 
 const defaultStats = [
   {
@@ -89,7 +104,6 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {visibleStats.map((stat) => {
-          const Icon = stat.icon
           return (
             <div
               key={stat.name}
@@ -97,7 +111,7 @@ export default function Dashboard() {
             >
               <dt>
                 <div className="absolute bg-emerald-500 rounded-md p-3">
-                  <Icon className="h-6 w-6 text-white" />
+                  <SafeIcon IconComponent={stat.icon} className="h-6 w-6 text-white" />
                 </div>
                 <p className="ml-16 text-sm font-medium text-gray-500 truncate">
                   {stat.name}
@@ -112,11 +126,10 @@ export default function Dashboard() {
                       : 'text-red-600'
                   }`}
                 >
-                  {stat.changeType === 'positive' ? (
-                    <ArrowUpRight className="h-4 w-4 flex-shrink-0 self-center" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4 flex-shrink-0 self-center" />
-                  )}
+                  <SafeIcon 
+                    IconComponent={stat.changeType === 'positive' ? ArrowUpRight : ArrowDownRight}
+                    className="h-4 w-4 flex-shrink-0 self-center"
+                  />
                   <span className="sr-only">
                     {stat.changeType === 'positive' ? 'Increased' : 'Decreased'} by
                   </span>
@@ -137,7 +150,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {hasPermission(user, 'transactions', 'create') && (
               <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <DollarSign className="h-6 w-6 text-emerald-600 mb-2" />
+                <SafeIcon IconComponent={DollarSign} className="h-6 w-6 text-emerald-600 mb-2" />
                 <h4 className="font-medium text-gray-900">New Transaction</h4>
                 <p className="text-sm text-gray-600">Create a new Islamic finance transaction</p>
               </button>
@@ -145,7 +158,7 @@ export default function Dashboard() {
             
             {hasPermission(user, 'reports', 'view') && (
               <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <FileText className="h-6 w-6 text-emerald-600 mb-2" />
+                <SafeIcon IconComponent={FileText} className="h-6 w-6 text-emerald-600 mb-2" />
                 <h4 className="font-medium text-gray-900">Generate Report</h4>
                 <p className="text-sm text-gray-600">Create detailed financial reports</p>
               </button>
@@ -153,7 +166,7 @@ export default function Dashboard() {
             
             {hasPermission(user, 'users', 'read') && (
               <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <Users className="h-6 w-6 text-emerald-600 mb-2" />
+                <SafeIcon IconComponent={Users} className="h-6 w-6 text-emerald-600 mb-2" />
                 <h4 className="font-medium text-gray-900">Manage Users</h4>
                 <p className="text-sm text-gray-600">Add or modify user accounts</p>
               </button>

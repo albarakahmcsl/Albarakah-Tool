@@ -47,4 +47,15 @@ export const queryKeys = {
   
   // Auth queries
   currentUser: () => ['auth', 'currentUser'] as const,
+
+  // Membership System Queries
+  members: () => ['members'] as const,
+  member: (memberId: string) => ['member', memberId] as const,
+  bankAccounts: () => ['bankAccounts'] as const,
+  bankAccount: (bankAccountId: string) => ['bankAccount', bankAccountId] as const,
+  bankAccountSummary: (bankAccountId: string) => ['bankAccountSummary', bankAccountId] as const,
+  accountTypes: () => ['accountTypes'] as const,
+  accountType: (accountTypeId: string) => ['accountType', accountTypeId] as const,
+  accounts: () => ['accounts'] as const,
+  account: (accountId: string) => ['account', accountId] as const,
 } as const

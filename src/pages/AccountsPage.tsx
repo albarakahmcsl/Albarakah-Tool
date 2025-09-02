@@ -87,6 +87,7 @@ export default function AccountsPage() {
   const accounts = accountsData?.accounts || []
   const members = membersData?.members || []
   const accountTypes = accountTypesData?.account_types || []
+  const bankAccounts = loaderData.bankAccounts || []
   const loading = accountsLoading || createAccountMutation.isPending || updateAccountMutation.isPending || deleteAccountMutation.isPending
 
   const filteredAccounts = accounts.filter(account =>
@@ -209,6 +210,7 @@ export default function AccountsPage() {
         <CreateAccountModal
           members={members}
           accountTypes={accountTypes}
+          bankAccounts={bankAccounts}
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateAccount}
         />
@@ -218,6 +220,7 @@ export default function AccountsPage() {
           account={selectedAccount}
           members={members}
           accountTypes={accountTypes}
+          bankAccounts={bankAccounts}
           onClose={() => {
             setShowEditModal(false)
             setSelectedAccount(null)
@@ -233,17 +236,20 @@ export default function AccountsPage() {
 function CreateAccountModal({ 
   members,
   accountTypes,
+  bankAccounts,
   onClose, 
   onSubmit 
 }: { 
   members: Member[]
   accountTypes: AccountType[]
+  bankAccounts: BankAccount[]
   onClose: () => void
   onSubmit: (accountData: CreateAccountData) => void
 }) {
   const [formData, setFormData] = useState<CreateAccountData>({
     member_id: members.length > 0 ? members[0].id : '',
     account_type_id: accountTypes.length > 0 ? accountTypes[0].id : '',
+    bank_account_id: bankAccounts.length > 0 ? bankAccounts[0].id : '',
     account_number: '',
     balance: 0,
     open_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD

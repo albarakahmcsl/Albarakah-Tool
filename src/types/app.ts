@@ -195,6 +195,7 @@ export interface UpdateMemberData {
 export interface CreateAccountData {
   member_id: string
   account_type_id: string
+  bank_account_id?: string
   account_number: string
   balance?: number
   open_date?: string
@@ -204,6 +205,7 @@ export interface CreateAccountData {
 export interface UpdateAccountData {
   member_id?: string
   account_type_id?: string
+  bank_account_id?: string
   account_number?: string
   balance?: number
   open_date?: string

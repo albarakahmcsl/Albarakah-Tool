@@ -198,7 +198,7 @@ const accountTypesLoader = async () => { // New: Loader for AccountTypesPage
 const accountsLoader = async () => { // New: Loader for AccountsPage
   console.log('[App] accountsLoader START')
   try {
-    const [accountsData, membersData, accountTypesData] = await Promise.all([
+    const [accountsData, membersData, accountTypesData, bankAccountsData] = await Promise.all([
       queryClient.fetchQuery({
         queryKey: queryKeys.accounts(),
         queryFn: accountsApi.getAccounts,
@@ -211,12 +211,21 @@ const accountsLoader = async () => { // New: Loader for AccountsPage
         queryKey: queryKeys.accountTypes(),
         queryFn: accountTypesApi.getAccountTypes,
       }),
+      queryClient.fetchQuery({
+        queryKey: queryKeys.bankAccounts(),
+        queryFn: bankAccountsApi.getBankAccounts,
+      }),
     ])
     console.log('[App] accountsLoader SUCCESS')
-    return { accounts: accountsData.accounts, members: membersData.members, accountTypes: accountTypesData.account_types }
+    return { 
+      accounts: accountsData.accounts, 
+      members: membersData.members, 
+      accountTypes: accountTypesData.account_types,
+      bankAccounts: bankAccountsData.bank_accounts
+    }
   } catch (error) {
     console.error('[App] accountsLoader ERROR:', error)
-    return { accounts: [], members: [], accountTypes: [] }
+    return { accounts: [], members: [], accountTypes: [], bankAccounts: [] }
   }
 }
 
